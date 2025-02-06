@@ -11,9 +11,11 @@ import (
 
 const UpdateBillItems = "update_bill_items"
 
-func ComposeBill(ctx workflow.Context, bill *models.Bill) error {
-    logger := workflow.GetLogger(ctx)
+const QueryBill = "query_bill"
 
+func ComposeBill(ctx workflow.Context, initial_bill *models.Bill) error {
+    logger := workflow.GetLogger(ctx)
+    bill := initial_bill
     options := workflow.ActivityOptions{
         StartToCloseTimeout: time.Second * 5,
         RetryPolicy: &temporal.RetryPolicy{
@@ -24,6 +26,9 @@ func ComposeBill(ctx workflow.Context, bill *models.Bill) error {
 
     ctx = workflow.WithActivityOptions(ctx, options)
 
+    workflow.SetQueryHandler(ctx, QueryBill, func () (*models.Bill,error) {
+        return bill, nil
+    })
     // Create update handler for updating bill with additional items
     err := workflow.SetUpdateHandler(ctx,UpdateBillItems, func(ctx workflow.Context, billItems []models.BillItem) error {
 		logger.Info("Received update to add bill items.")
@@ -33,8 +38,11 @@ func ComposeBill(ctx workflow.Context, bill *models.Bill) error {
             if err != nil {
                 logger.Error("failed to process a bill item: ", strconv.Itoa(billItem.Amount) + billItem.Currency)
                 // probably send some notification or alert
+            } else {
+                bill.BillItems = append(bill.BillItems, billItem)
             }
         }
+        
         return nil
     },
 )

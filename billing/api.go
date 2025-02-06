@@ -37,13 +37,16 @@ func (s *Service) ListBills(ctx context.Context,params *workflows.ListBillParams
 
 //encore:api private path=/bill/:billId
 func (s *Service) GetBill(ctx context.Context, billId string) (*models.Bill, error) {
-	bill,err := workflows.GetBill(ctx, billId)
+	result,err := s.Client.QueryWorkflow(context.Background(), billId, "",workflows.QueryBill,nil)
+	var bill *models.Bill
 	if err != nil {
         return nil, &errs.Error{
 			Code: errs.InvalidArgument,
 			Message: err.Error(),
 		}
     }
+	
+	result.Get(&bill)
 
 	return bill, nil
 }
