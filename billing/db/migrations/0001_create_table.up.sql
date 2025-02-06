@@ -17,4 +17,14 @@ CREATE TABLE bill_item (
   currency currency_type NOT NULL,
 
   FOREIGN KEY (bill_id) REFERENCES bill(id) ON DELETE CASCADE
-)
+);
+
+CREATE VIEW bill_summary AS
+SELECT
+  bill_id,
+  currency,
+  SUM(amount) as total_amount
+FROM
+  bill_item
+GROUP BY
+  bill_id, currency;
