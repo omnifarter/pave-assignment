@@ -150,6 +150,31 @@ func GetBillSummary(ctx context.Context, billId string) (*models.BillSummary, er
 	}
 
 	rows, err := db.BillDb.Query(ctx,`
+	SELECT id, currency, amount
+	FROM bill_item
+	where bill_item.bill_id = $1
+	`,billId)
+
+	if err != nil {
+		return nil, err
+	}
+
+
+	var billItems []models.BillItem
+
+	for rows.Next() {
+		var item models.BillItem
+		err := rows.Scan(&item.Id, &item.Currency, &item.Amount)
+		if err != nil {
+			return nil, err
+		}
+		billItems = append(billItems, item)
+	}
+	billSummary.BillItems = billItems
+
+	rows.Close()
+
+	rows, err = db.BillDb.Query(ctx,`
 	SELECT bill_id, currency, total_amount
 	FROM bill_summary
 	where bill_summary.bill_id = $1
@@ -158,8 +183,6 @@ func GetBillSummary(ctx context.Context, billId string) (*models.BillSummary, er
 	if err != nil {
 		return nil, err
 	}
-
-	defer rows.Close()
 
 	var billItemSummary []models.BillItemSummary
 
@@ -172,6 +195,8 @@ func GetBillSummary(ctx context.Context, billId string) (*models.BillSummary, er
 		billItemSummary = append(billItemSummary, item)
 	}
 	billSummary.BillItemSummary = billItemSummary
+
+	rows.Close()
 
 	return &billSummary, nil
 }

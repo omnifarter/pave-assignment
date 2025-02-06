@@ -19,6 +19,7 @@ type BillSummary struct {
 	BillId string `json:"id"`
 	ClosedAt time.Time `json:"closedAt"`
 	Status string `json:"status"`
+	BillItems []BillItem `json:"billItems"`
 	BillItemSummary []BillItemSummary `json:"billItemSummary"`
 }
 
