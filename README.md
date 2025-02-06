@@ -13,6 +13,10 @@ This is a RESTful API Starter with a single Hello World API endpoint.
 **Setup local DB**
 Encore uses Docker for local DB setup. Ensure your local Docker instance is running before starting encore. [Follow the instructions here to learn more.](https://encore.dev/docs/platform/infrastructure/infra)
 
+**Install Temporal CLI**
+
+[Follow the instructions here for getting started.](https://learn.temporal.io/getting_started/go/dev_environment/?os=linux#set-up-a-local-temporal-service-for-development-with-temporal-cli)
+
 ## Run Encore locally
 
 Run this command from your application's root folder:
@@ -32,6 +36,8 @@ In a separate terminal instance, run this command from the application root fold
 ```bash
 temporal server start-dev --db-filename temporal-local.db
 ```
+
+You can then access the Temporal UI at http://localhost:8233
 
 ## Testing
 
