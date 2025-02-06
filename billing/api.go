@@ -17,12 +17,12 @@ type Response struct {
 }
 
 type CreateBillResponse struct {
-	BillId string `json:"bill_id"`
+	BillId string `json:"billId"`
 }
 
-//encore:api private path=/bill/:bill_id
-func (s *Service) GetBill(ctx context.Context, bill_id string) (*models.Bill, error) {
-	bill,err := workflows.GetBill(ctx, bill_id)
+//encore:api private path=/bill/:billId
+func (s *Service) GetBill(ctx context.Context, billId string) (*models.Bill, error) {
+	bill,err := workflows.GetBill(ctx, billId)
 	if err != nil {
         return nil, &errs.Error{
 			Code: errs.InvalidArgument,
@@ -59,10 +59,10 @@ type AddBillItemsRequest struct {
 	BillItems []models.BillItem `json:"billItems"`
 }
 
-//encore:api private method=POST path=/bill/:bill_id/items
-func (s *Service) AddBillItems(ctx context.Context, bill_id string, billItems AddBillItemsRequest) (*Response, error) {
-	rlog.Info("Bill ID" + bill_id)
-	isOpen, err := workflows.CheckOpenBill(ctx,bill_id)
+//encore:api private method=POST path=/bill/:billId/items
+func (s *Service) AddBillItems(ctx context.Context, billId string, billItems AddBillItemsRequest) (*Response, error) {
+	rlog.Info("Bill ID" + billId)
+	isOpen, err := workflows.CheckOpenBill(ctx,billId)
 	if err != nil {
 		return nil, &errs.Error{
 			Code: errs.InvalidArgument,
@@ -77,14 +77,14 @@ func (s *Service) AddBillItems(ctx context.Context, bill_id string, billItems Ad
 	}
 
 	updateHandle , err := s.Client.UpdateWorkflow(context.Background(),client.UpdateWorkflowOptions{
-		WorkflowID: bill_id,
+		WorkflowID: billId,
 		UpdateName: workflows.UpdateBillItems,
 		Args: []interface{}{billItems.BillItems},
 		WaitForStage: client.WorkflowUpdateStageCompleted,
 	})
 
 	if err != nil {
-		rlog.Error("Failed to update bill", bill_id)
+		rlog.Error("Failed to update bill", billId)
 		return nil, &errs.Error{
 			Code: errs.InvalidArgument,
 			Message: err.Error(),
@@ -95,7 +95,7 @@ func (s *Service) AddBillItems(ctx context.Context, bill_id string, billItems Ad
 	err = updateHandle.Get(context.Background(),&updateResult)
 
 	if err != nil {
-		rlog.Error("Failed to update bill", bill_id)
+		rlog.Error("Failed to update bill", billId)
 		return nil, & errs.Error{
 			Code: errs.InvalidArgument,
 			Message: err.Error(),
@@ -107,9 +107,9 @@ func (s *Service) AddBillItems(ctx context.Context, bill_id string, billItems Ad
 
 
 
-//encore:api private path=/bill/:bill_id/close
-func (s *Service) CloseBill(ctx context.Context, bill_id string) (*Response, error) {
-	err := s.Client.SignalWorkflow(ctx, bill_id, "", "CLOSE_BILL",nil)
+//encore:api private path=/bill/:billId/close
+func (s *Service) CloseBill(ctx context.Context, billId string) (*Response, error) {
+	err := s.Client.SignalWorkflow(ctx, billId, "", "CLOSE_BILL",nil)
 	if err != nil {
         return nil, &errs.Error{
 			Code: errs.InvalidArgument,
@@ -117,4 +117,29 @@ func (s *Service) CloseBill(ctx context.Context, bill_id string) (*Response, err
 		}
     }
 	return  &Response{Message: "Bill closed"}, nil
+}
+
+//encore:api private path=/bill/:billId/summary
+func (s *Service) GetBillSummary(ctx context.Context, billId string) (*models.BillSummary, error) {
+	isOpen, err := workflows.CheckOpenBill(ctx,billId)
+	if err != nil {
+		return nil, &errs.Error{
+			Code: errs.InvalidArgument,
+			Message: err.Error(),
+		}
+	}
+	if isOpen {
+		return nil, &errs.Error{
+			Code: errs.FailedPrecondition,
+			Message: "Bill is still open.",
+		}
+	}
+	billSummary, err := workflows.GetBillSummary(ctx, billId)
+	if err != nil {
+        return nil, &errs.Error{
+			Code: errs.InvalidArgument,
+			Message: err.Error(),
+		}
+    }
+	return  billSummary, nil
 }

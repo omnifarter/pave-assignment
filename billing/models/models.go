@@ -10,7 +10,20 @@ type BillItem struct {
 
 type Bill struct {
 	BillId string `json:"id"`
-	CloseDate time.Time `json:"close_date"`
+	CloseDate time.Time `json:"closeDate"`
 	Status string `json:"status"`
 	BillItems []BillItem
+}
+
+type BillSummary struct {
+	BillId string `json:"id"`
+	ClosedAt time.Time `json:"closedAt"`
+	Status string `json:"status"`
+	BillItemSummary []BillItemSummary `json:"billItemSummary"`
+}
+
+type BillItemSummary struct {
+	BillId string `json:"billId"`
+	TotalAmount int `json:"totalAmount"`
+	Currency string `json:"currency"`
 }

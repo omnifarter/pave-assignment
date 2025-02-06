@@ -33,7 +33,7 @@ func validateBillItem(amount int, currency string) error {
 	if amount <= 0 {
 		return temporal.NewNonRetryableApplicationError("Invalid amount "+ fmt.Sprint(amount), "INVALID-DATA",nil)
 		}
-	if currency != "USD" && currency != "GEP" {
+	if currency != "USD" && currency != "GEL" {
 		return temporal.NewNonRetryableApplicationError("Invalid currency: " + currency, "INVALID-DATA",nil)
 	}
 	return nil
@@ -135,4 +135,43 @@ func CheckOpenBill(ctx context.Context, billId string) (bool,error) {
 		return false, err
 	}
 	return bill.Status == "open", nil
+}
+
+func GetBillSummary(ctx context.Context, billId string) (*models.BillSummary, error) {
+	var billSummary models.BillSummary
+	err := db.BillDb.QueryRow(ctx, `
+	SELECT id,status, closed_at
+	FROM bill
+	WHERE bill.id = $1
+	`,billId).Scan(&billSummary.BillId, &billSummary.Status, &billSummary.ClosedAt)
+
+	if err != nil {
+		return nil, temporal.NewNonRetryableApplicationError("Bill not found", "NOT_FOUND",nil)
+	}
+
+	rows, err := db.BillDb.Query(ctx,`
+	SELECT bill_id, currency, total_amount
+	FROM bill_summary
+	where bill_summary.bill_id = $1
+	`,billId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var billItemSummary []models.BillItemSummary
+
+	for rows.Next() {
+		var item models.BillItemSummary
+		err := rows.Scan(&item.BillId, &item.Currency, &item.TotalAmount)
+		if err != nil {
+			return nil, err
+		}
+		billItemSummary = append(billItemSummary, item)
+	}
+	billSummary.BillItemSummary = billItemSummary
+
+	return &billSummary, nil
 }

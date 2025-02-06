@@ -57,6 +57,7 @@ func ComposeBill(ctx workflow.Context, bill *models.Bill) error {
 	signalChan := workflow.GetSignalChannel(ctx, "CLOSE_BILL")
 	selector.AddReceive(signalChan, func(_ workflow.ReceiveChannel, _ bool) {
 		logger.Info("Received signal to close bill early.")
+        workflow.ExecuteActivity(ctx, CloseBill, bill.BillId).Get(ctx,nil)
         cancelHandler()
 	})
 

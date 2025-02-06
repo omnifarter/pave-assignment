@@ -95,3 +95,21 @@ func TestActivity_CloseBill_Invalid(t *testing.T) {
 	_, err := env.ExecuteActivity(CloseBill, uuid.New().String())
 	require.Error(t, err)
 }
+func TestActivity_GetBillSummary(t *testing.T) {
+	testSuite := &testsuite.WorkflowTestSuite{}
+	env := testSuite.NewTestActivityEnvironment()
+	env.RegisterActivity(GetBillSummary)
+	bill, _ := CreateBill(context.Background(), time.Now().Add(24 * time.Hour))
+	 _  = CloseBill(context.Background(), bill.BillId)
+	_, err := env.ExecuteActivity(GetBillSummary, bill.BillId)
+	require.NoError(t, err)
+}
+
+func TestActivity_GetBillSummary_InvalidOpenBill(t *testing.T) {
+	testSuite := &testsuite.WorkflowTestSuite{}
+	env := testSuite.NewTestActivityEnvironment()
+	env.RegisterActivity(GetBillSummary)
+	bill, _ := CreateBill(context.Background(), time.Now().Add(24 * time.Hour))
+	_, err := env.ExecuteActivity(GetBillSummary, bill.BillId)
+	require.Error(t, err)
+}

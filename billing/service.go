@@ -36,6 +36,7 @@ func initService() (*Service, error) {
 	w.RegisterActivity(workflows.CreateBill)
 	w.RegisterActivity(workflows.AddBillItem)
 	w.RegisterActivity(workflows.GetBill)
+	w.RegisterActivity(workflows.GetBillSummary)
 	w.RegisterActivity(workflows.CheckOpenBill)
 
 	err = w.Start()
