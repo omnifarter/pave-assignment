@@ -1,0 +1,4 @@
+DROP TABLE IF EXISTS bill;
+DROP TABLE IF EXISTS bill_item;
+DROP TYPE IF EXISTS bill_status;
+DROP TYPE IF EXISTS currency_type;
