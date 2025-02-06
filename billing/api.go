@@ -16,9 +16,24 @@ type Response struct {
 	Message string
 }
 
-type CreateBillResponse struct {
-	BillId string `json:"billId"`
+
+type ListBillResponse struct {
+	Bills []models.Bill `json:"bills"`
 }
+//encore:api private method=GET path=/bills
+func (s *Service) ListBills(ctx context.Context,params *workflows.ListBillParams) (*ListBillResponse, error) {
+	bills,err := workflows.ListBills(ctx, params)
+	if err != nil {
+        return nil, &errs.Error{
+			Code: errs.InvalidArgument,
+			Message: err.Error(),
+		}
+    }
+
+	return &ListBillResponse{Bills: bills}, nil
+}
+
+
 
 //encore:api private path=/bill/:billId
 func (s *Service) GetBill(ctx context.Context, billId string) (*models.Bill, error) {
@@ -38,6 +53,10 @@ func (s *Service) GetBill(ctx context.Context, billId string) (*models.Bill, err
 type CreateBillRequest struct {
 	CloseDate time.Time `json:"CloseDate"`
 }
+type CreateBillResponse struct {
+	BillId string `json:"billId"`
+}
+
 
 //encore:api private method=POST path=/bill
 func (s *Service) CreateBill(ctx context.Context, createBillRequest CreateBillRequest) (*CreateBillResponse, error) {

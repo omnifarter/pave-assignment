@@ -200,3 +200,41 @@ func GetBillSummary(ctx context.Context, billId string) (*models.BillSummary, er
 
 	return &billSummary, nil
 }
+type ListBillParams struct {
+	Status string
+}
+func ListBills(ctx context.Context, params *ListBillParams) ([]models.Bill, error) {
+	query := `
+	SELECT id, status 
+	FROM bill
+	WHERE 1=1
+	`
+	var args []interface{}
+	if params.Status != "" {
+		query += `
+		AND status = $1
+		`
+		args = append(args, params.Status)
+	}
+
+	rows, err := db.BillDb.Query(ctx,query, args...)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var bills []models.Bill
+
+	for rows.Next() {
+		var item models.Bill
+		err := rows.Scan(&item.BillId, &item.Status)
+		if err != nil {
+			return nil, err
+		}
+		bills = append(bills, item)
+	}
+	return bills, nil
+
+}
